@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const connectDB = require('../config/db');
+const ApiError = require('../utils/apiError');
 
 /**
- * Protect routes by verifying JWT in Authorization header.
- * Expected header: "Authorization: Bearer <token>"
+ * Protect route middleware - verifies JWT Bearer token
  */
 const protect = async (req, res, next) => {
   let token;
@@ -17,10 +17,7 @@ const protect = async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: 'Access denied. No authorization token provided.',
-    });
+    return next(ApiError.unauthorized('Access denied. No authorization token provided.'));
   }
 
   try {
@@ -31,20 +28,13 @@ const protect = async (req, res, next) => {
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'The user belonging to this token no longer exists.',
-      });
+      return next(ApiError.unauthorized('The user belonging to this token no longer exists.'));
     }
 
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid or expired token. Please sign in again.',
-      error: err.message,
-    });
+    return next(ApiError.unauthorized('Invalid or expired token. Please sign in again.'));
   }
 };
 

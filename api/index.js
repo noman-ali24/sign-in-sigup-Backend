@@ -1,7 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('../src/routes/authRoutes');
+const authRoutes = require('../src/routes/index');
+const errorHandler = require('../src/middlewares/error.middleware');
+const ApiError = require('../src/utils/apiError');
+const ApiResponse = require('../src/utils/apiResponse');
 
 const app = express();
 
@@ -20,48 +23,42 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint (supports both /api/health and /health)
 app.get(['/api/health', '/health'], (req, res) => {
-  res.status(200).json({
-    success: true,
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'AutoPulse Auth API',
-  });
+  return ApiResponse.success(
+    res,
+    {
+      service: 'AutoPulse Auth API',
+      timestamp: new Date().toISOString(),
+    },
+    'Service is healthy'
+  );
 });
 
 // Root welcome route
 app.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Welcome to AutoPulse Authentication Backend API',
-    endpoints: {
-      health: 'GET /api/health',
-      signup: 'POST /api/auth/signup',
-      signin: 'POST /api/auth/signin',
-      profile: 'GET /api/auth/profile',
+  return ApiResponse.success(
+    res,
+    {
+      endpoints: {
+        health: 'GET /api/health',
+        signup: 'POST /api/auth/signup',
+        signin: 'POST /api/auth/signin',
+        profile: 'GET /api/auth/profile',
+      },
     },
-  });
+    'Welcome to AutoPulse Authentication Backend API'
+  );
 });
 
-// Auth Routes (Mount on /api/auth and fallback /auth)
+// Mount Central Auth Routes (Supports both /api/auth and /auth)
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
 
-// 404 handler for undefined routes
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-  });
+// Catch-all 404 handler
+app.use((req, res, next) => {
+  next(ApiError.notFound(`Route not found: ${req.method} ${req.originalUrl}`));
 });
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled Server Error:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'production' ? undefined : err.message,
-  });
-});
+// Global Centralized Error Handling Middleware
+app.use(errorHandler);
 
 module.exports = app;
