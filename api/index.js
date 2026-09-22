@@ -18,8 +18,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Health check endpoint (supports both /api/health and /health)
+app.get(['/api/health', '/health'], (req, res) => {
   res.status(200).json({
     success: true,
     status: 'healthy',
