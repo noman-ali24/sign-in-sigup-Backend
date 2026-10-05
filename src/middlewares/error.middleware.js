@@ -8,13 +8,10 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message;
   error.statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
-  // Log error in non-test environments
-  if (process.env.NODE_ENV !== 'test') {
-    console.error('API Error:', {
-      message: err.message,
-      stack: err.stack,
-      statusCode: error.statusCode,
-    });
+  // Log error in console
+  console.error(`❌ [API ERROR] ${req.method} ${req.originalUrl} -> Status: ${error.statusCode} | ${error.message}`);
+  if (err.errors && err.errors.length > 0) {
+    console.error('   Validation Details:', JSON.stringify(err.errors));
   }
 
   // Mongoose duplicate key error (e.g. unique email)

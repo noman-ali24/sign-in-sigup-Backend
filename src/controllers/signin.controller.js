@@ -9,7 +9,10 @@ const signinService = require('../services/signin.service');
  */
 const signinController = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  console.log(`🔐 [SIGNIN] Attempting signin for email: ${email}`);
   const result = await signinService({ email, password });
+
+  console.log(`🎉 [SIGNIN SUCCESS] User signed in: ${result.user.email} (ID: ${result.user.id})`);
 
   return ApiResponse.success(
     res,
