@@ -8,9 +8,12 @@ const ApiError = require('../utils/apiError');
  */
 const generateToken = (userId) => {
   const secret = process.env.JWT_SECRET || 'autopulse_super_secret_jwt_key_2026_change_me';
-  const expiresIn = process.env.JWT_EXPIRE || '30d';
+  let expiresIn = process.env.JWT_EXPIRE;
+  if (!expiresIn || String(expiresIn).trim() === '') {
+    expiresIn = '30d';
+  }
 
-  return jwt.sign({ id: userId }, secret, { expiresIn });
+  return jwt.sign({ id: userId }, secret, { expiresIn: String(expiresIn).trim() });
 };
 
 /**
